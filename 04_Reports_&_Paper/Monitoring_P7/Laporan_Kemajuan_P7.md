@@ -8,6 +8,10 @@
 **Program Studi**: Ilmu Komputer, IPB University  
 **Tanggal Laporan** : Mei 2026 (Pertemuan 7)  
 **Status Laporan** : Monitoring Tahap 1  
+**Kelompok 2**   :
+- Syafiq Syadidul Azmi (G6401231075)
+- Muhammad Faqih (G6401231081)
+- Luqman Fadillah Santoso (G6401231136)
 
 ---
 

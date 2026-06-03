@@ -1,32 +1,24 @@
 from datetime import datetime
 from datetime import date
-from pathlib import Path
-from uuid import uuid4
 
+from digital_signature.auth_router import get_current_user
+from backend.app.domains.user.entity import UserEntity
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from digital_signature.auth_router import get_current_user
 from backend.app.api.v1.schemas.item_schema import ItemResponse
 from backend.app.domains.item.entity import ItemEntity, ItemStatus, ReportType
 from backend.app.domains.item.service import ItemService
-from backend.app.domains.user.entity import UserEntity
-from backend.app.infrastructure.config.settings import settings
-from backend.app.infrastructure.repositories.item_repository import ItemRepository
 from database.session import get_db
+from backend.app.infrastructure.repositories.activity_history_repository import ActivityHistoryRepository
+from backend.app.infrastructure.repositories.item_repository import ItemRepository
+from backend.app.infrastructure.storage.file_storage import save_upload_file
 
 router = APIRouter()
 
 
 def save_item_image(upload_file: UploadFile) -> str:
-	storage_dir = Path(settings.CLAIM_UPLOAD_DIR).parent / "items"
-	storage_dir.mkdir(parents=True, exist_ok=True)
-	extension = Path(upload_file.filename or "item").suffix or ".jpg"
-	file_name = f"{uuid4().hex}{extension}"
-	file_path = storage_dir / file_name
-	content = upload_file.file.read()
-	file_path.write_bytes(content)
-	return f"/storage/items/{file_name}"
+	return save_upload_file(upload_file, subdir="items", default_extension=".jpg")
 
 
 def build_item(
@@ -61,7 +53,7 @@ async def report_lost_item(
 	description: str = Form(...),
 	location: str = Form(...),
 	category: str | None = Form(None),
-	image: UploadFile = File(...),
+	image: UploadFile | None = File(None),
 	db: AsyncSession = Depends(get_db),
 	current_user: UserEntity = Depends(get_current_user)
 ):
@@ -71,10 +63,12 @@ async def report_lost_item(
 	reporter_id = current_user.id
 
 	try:
-		image_path = save_item_image(image)
+		image_path = save_item_image(image) if image else None
 		result = await service.report_lost_item(
-			build_item(title, description, location, category, image_path, ItemStatus.LOST, ReportType.LOST, reporter_id)
+			build_item(title, description, location, category, image_path, ItemStatus.NOT_RETURNED, ReportType.LOST, reporter_id)
 		)
+		history_repo = ActivityHistoryRepository(db)
+		await history_repo.create_report_entry(reporter_id, result)
 		return {"status": "success", "data": result}
 	except ValueError as e:
 		raise HTTPException(status_code=400, detail=str(e))
@@ -86,7 +80,7 @@ async def report_found_item(
 	description: str = Form(...),
 	location: str = Form(...),
 	category: str | None = Form(None),
-	image: UploadFile = File(...),
+	image: UploadFile | None = File(None),
 	db: AsyncSession = Depends(get_db),
 	current_user: UserEntity = Depends(get_current_user)
 ):
@@ -96,10 +90,12 @@ async def report_found_item(
 	reporter_id = current_user.id
 
 	try:
-		image_path = save_item_image(image)
+		image_path = save_item_image(image) if image else None
 		result = await service.report_found_item(
-			build_item(title, description, location, category, image_path, ItemStatus.FOUND, ReportType.FOUND, reporter_id)
+			build_item(title, description, location, category, image_path, ItemStatus.NOT_RETURNED, ReportType.FOUND, reporter_id)
 		)
+		history_repo = ActivityHistoryRepository(db)
+		await history_repo.create_report_entry(reporter_id, result)
 		return {"status": "success", "data": result}
 	except ValueError as e:
 		raise HTTPException(status_code=400, detail=str(e))

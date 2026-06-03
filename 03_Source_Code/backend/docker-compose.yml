@@ -1,10 +1,11 @@
+name: ki_project_backend
 services:
   # 1. Service untuk Backend
-  ads_backend:
+  ki_backend:
     build:
       context: ..
       dockerfile: backend/Dockerfile
-    container_name: ads_backend
+    container_name: ki_backend
     ports:
       - "8000:8000"
     env_file:
@@ -12,7 +13,7 @@ services:
     depends_on:
       - db
     volumes:
-      - ./storage:/app/backend/storage
+      - ./storage:/src/storage
     restart: unless-stopped
 
   # 2. Service untuk Database PostgreSQL
@@ -29,4 +30,4 @@ services:
 
 volumes:
   pg_data:
-    name: ads_pg_data
+    name: ki_pg_data

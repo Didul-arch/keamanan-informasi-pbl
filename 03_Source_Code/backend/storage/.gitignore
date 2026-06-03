@@ -2,3 +2,5 @@
 !.gitignore
 !claims/
 !claims/.gitkeep
+!identity-documents/
+!identity-documents/.gitkeep

@@ -35,6 +35,7 @@ wheels/
 Thumbs.db
 
 # Environment
+.env
 .env.local
 .venv
 
@@ -46,7 +47,6 @@ DEV_*.md
 *.db
 *.sqlite
 *.sqlite3
-alembic.ini
 
 # Logs
 *.log

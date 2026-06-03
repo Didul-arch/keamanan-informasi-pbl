@@ -6,10 +6,16 @@ class ClaimStatus(str, Enum):
     PENDING = "pending"
     APPROVED = "approved"
     REJECTED = "rejected"
+
+
+class RequestType(str, Enum):
+    CLAIM = "claim"
+    FOUND = "found"
    
 @dataclass
 class ClaimEntity:
     id: int | None
+    request_type: RequestType
     proof_text: str
     proof_image: str | None
     status: ClaimStatus
@@ -20,13 +26,16 @@ class ClaimEntity:
     created_at: datetime
     updated_at: datetime | None
 
-    def update_status(self, new_status: ClaimStatus, reviewer_id: int):
+    def approve(self, reviewer_id: int):
         if self.status != ClaimStatus.PENDING:
             raise ValueError("Claim yang sudah diproses tidak bisa diubah lagi.")
+        self.status = ClaimStatus.APPROVED
+        self.reviewer_id = reviewer_id
+        self.updated_at = datetime.now()
 
-        if new_status not in {ClaimStatus.APPROVED, ClaimStatus.REJECTED}:
-            raise ValueError("Status claim hanya boleh diubah ke approved atau rejected.")
-
-        self.status = new_status
+    def reject(self, reviewer_id: int):
+        if self.status != ClaimStatus.PENDING:
+            raise ValueError("Claim yang sudah diproses tidak bisa diubah lagi.")
+        self.status = ClaimStatus.REJECTED
         self.reviewer_id = reviewer_id
         self.updated_at = datetime.now()

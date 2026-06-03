@@ -1,61 +1,57 @@
 # Source Code
 
-Folder ini berisi implementasi teknis proyek keamanan informasi. Struktur aktif saat ini dipisah menjadi dua bagian utama: `backend` dan `database`.
+Folder ini berisi implementasi teknis proyek keamanan informasi. Struktur aktif saat ini dipisah menjadi tiga bagian utama: `backend`, `database`, dan `digital_signature`.
 
-## Struktur Folder
+## 🚀 Cara Menjalankan Aplikasi (Lokal dengan Docker)
+
+Aplikasi ini sudah dikonfigurasi agar bisa berjalan 100% secara lokal (termasuk Database PostgreSQL dan Penyimpanan File) menggunakan Docker Compose. Tidak perlu layanan cloud eksternal!
+
+1. Buka terminal dan arahkan ke direktori `03_Source_Code`.
+2. Jalankan perintah berikut:
+   ```bash
+   docker compose -f backend/docker-compose.yml up --build -d
+   ```
+3. Backend API akan menyala dan bisa diakses di: `http://localhost:8000`
+4. Untuk melihat dokumentasi API (Swagger UI), buka: `http://localhost:8000/docs`
+5. Semua file media (foto barang, dokumen identitas, bukti klaim) akan tersimpan secara otomatis di folder `03_Source_Code/storage/`.
+
+---
+
+## 📂 Struktur Folder
 
 ```text
 03_Source_Code/
-├── backend/           # Implementasi aplikasi utama: API, domain, infrastruktur, migrasi, dan storage
+├── backend/           # Implementasi aplikasi utama: API, domain, infrastruktur, migrasi, dan konfigurasi
 ├── database/          # Session database dan model ORM
-└── digital_signature/ # Autentikasi, JWT, hashing, dan non-repudiation
+└── digital_signature/ # Autentikasi, JWT, hashing, dan keamanan
 ```
 
-## Backend
-
-Folder `backend/` memuat seluruh implementasi layanan utama, termasuk:
+### Detail Struktur
 
 ```text
 backend/
 ├── app/
-│   ├── api/v1/
-│   │   ├── routers/
-│   │   └── schemas/
-│   ├── domains/
-│   └── infrastructure/
-├── alembic/
-├── storage/
-├── Dockerfile
-├── docker-compose.yml
-├── requirements.txt
-└── README.md
+│   ├── api/v1/          # Endpoint API (routers) dan schema (Pydantic)
+│   ├── domains/         # Logika bisnis inti (Entity dan Service) per domain
+│   └── infrastructure/  # Konfigurasi (.env parser), Repositori, dan Utils Storage
+├── alembic/             # Konteks migrasi database
+├── alembic.ini          # Config utama Alembic
+├── Dockerfile           # Konfigurasi container backend
+├── docker-compose.yml   # Orkestrasi Docker (Database + Backend)
+├── requirements.txt     # Dependencies aplikasi
+└── .env                 # Variabel konfigurasi khusus untuk lingkungan lokal docker
 
 database/
-├── session.py
-└── models/
+├── session.py           # Konfigurasi AsyncSession, Engine SQLAlchemy, get_db dependency
+└── models/              # Definisi tabel PostgreSQL (user, item, claim, dll.)
 
 digital_signature/
-├── auth_router.py
-├── auth_schema.py
-└── utils.py
+├── auth_router.py       # Route untuk proses otentikasi (login, register)
+├── auth_schema.py       # Validasi I/O untuk autentikasi
+└── utils.py             # Verifikasi password, hashing (Argon2), pembuatan token JWT
 ```
 
-### Isi Utama Backend
+## 📝 Catatan Tambahan
 
-- `backend/app/api/v1/routers/` untuk endpoint API.
-- `backend/app/api/v1/schemas/` untuk schema request/response.
-- `backend/app/domains/` untuk entity dan service per domain.
-- `backend/app/infrastructure/` untuk konfigurasi dan repository aplikasi.
-- `database/` untuk session database dan model ORM.
-- `digital_signature/` untuk autentikasi, hashing, dan JWT.
-- `alembic/` untuk migrasi database.
-- `storage/` untuk file atau data pendukung aplikasi.
-
-## Database
-
-Folder `database/` sekarang dipakai untuk session dan model ORM.
-
-## Catatan
-
-- Struktur ini sudah memisahkan concern autentikasi ke `digital_signature/`.
-- Jika nanti ada kebutuhan tambahan, struktur folder bisa diperluas tanpa mengubah pemisahan utama antara backend, database, dan digital_signature.
+- **Pemisahan Concern**: Struktur ini memastikan fitur keamanan (autentikasi dan non-repudiation) tidak bercampur dengan _business logic_ biasa.
+- **Konvensi Import**: Proyek ini menggunakan arsitektur _absolute import_ yang merujuk pada tiga root folder. Oleh karena itu, jika Anda tidak menggunakan Docker dan ingin me-run program secara manual via uvicorn/alembic, perintah CLI **harus dijalankan dari level direktori `03_Source_Code`**.

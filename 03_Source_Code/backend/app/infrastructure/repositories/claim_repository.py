@@ -1,8 +1,9 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from backend.app.domains.claim.entity import ClaimEntity, ClaimStatus
+from backend.app.domains.claim.entity import ClaimEntity, ClaimStatus, RequestType
 from sqlalchemy import select
 from datetime import date, datetime, time, timedelta
 from database.models.claim_model import ClaimModel
+from backend.app.infrastructure.storage.file_storage import get_accessible_file_url
 
 class ClaimRepository:
     def __init__(self, db: AsyncSession):
@@ -11,8 +12,9 @@ class ClaimRepository:
     def _to_entity(self, claim: ClaimModel) -> ClaimEntity:
         return ClaimEntity(
             id=claim.id,
+            request_type=claim.request_type,
             proof_text=claim.proof_text,
-            proof_image=claim.proof_image,
+            proof_image=get_accessible_file_url(claim.proof_image),
             status=claim.status,
             claimer_id=claim.claimer_id,
             item_id=claim.item_id,
@@ -25,6 +27,7 @@ class ClaimRepository:
     # 1. Save new claim
     async def save(self, claim: ClaimEntity) -> ClaimEntity:
         db_claim = ClaimModel(
+            request_type=claim.request_type,
             proof_text=claim.proof_text,
             proof_image=claim.proof_image,
             status=claim.status,
@@ -39,8 +42,7 @@ class ClaimRepository:
         await self.db.commit()
         await self.db.refresh(db_claim)
 
-        claim.id = db_claim.id
-        return claim
+        return self._to_entity(db_claim)
 
     # 2. Cari Semua Klaim 
     async def get_all(self, limit: int = 20) -> list[ClaimEntity]:

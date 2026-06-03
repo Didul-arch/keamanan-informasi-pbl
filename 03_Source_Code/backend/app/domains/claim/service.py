@@ -37,15 +37,12 @@ class ClaimService:
             status=status,
         )
 
-    async def review_claim(
-        self,
-        claim_id: int,
-        new_status: ClaimStatus,
-        reviewer_id: int,
-    ) -> ClaimEntity | None:
+    async def review_claim(self, claim_id: int, new_status, reviewer_id: int):
         claim = await self.claim_repo.get_by_id(claim_id)
         if not claim:
             return None
-
-        claim.update_status(new_status, reviewer_id)
+        if new_status == ClaimStatus.APPROVED:
+            claim.approve(reviewer_id)
+        else:
+            claim.reject(reviewer_id)
         return await self.claim_repo.update_status(claim_id, claim)

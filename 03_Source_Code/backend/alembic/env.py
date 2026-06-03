@@ -8,15 +8,15 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
 
-# Ensure project root is on sys.path so imports work when running inside Docker
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+# Ensure project root (03_Source_Code) is on sys.path so imports work
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
 
-# Import application modules from the reorganized package layout.
-from backend.app.infrastructure.config.settings import settings
-from database.models import claim_model, item_model, user_model  # noqa: F401
+# Import from the new package structure
 from database.session import Base
+from backend.app.infrastructure.config.settings import settings
+from database.models import activity_history_model, claim_model, item_model, notification_model, user_model  # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

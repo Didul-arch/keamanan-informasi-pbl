@@ -1,9 +1,10 @@
 from pydantic import BaseModel
 
-from backend.app.domains.claim.entity import ClaimStatus
+from backend.app.domains.claim.entity import ClaimStatus, RequestType
 
 
 class CreateClaimRequest(BaseModel):
+    request_type: RequestType = RequestType.CLAIM
     proof_text: str
     proof_image: str | None = None
     item_id: int

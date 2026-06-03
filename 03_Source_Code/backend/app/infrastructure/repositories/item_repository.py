@@ -1,8 +1,9 @@
 from sqlalchemy.ext.asyncio import AsyncSession
+from database.models.item_model import ItemModel
+from backend.app.domains.item.entity import ItemEntity, ReportType
 from sqlalchemy import select
 from datetime import date, datetime, time, timedelta
-from backend.app.domains.item.entity import ItemEntity, ReportType
-from database.models.item_model import ItemModel
+from backend.app.infrastructure.storage.file_storage import get_accessible_file_url
 
 class ItemRepository:
     def __init__(self, db: AsyncSession):
@@ -14,7 +15,7 @@ class ItemRepository:
             title=item.title,
             description=item.description,
             location=item.location,
-            image=item.image,
+            image=get_accessible_file_url(item.image),
             category=item.category,
             latitude=item.latitude,
             longitude=item.longitude,
@@ -42,9 +43,8 @@ class ItemRepository:
         self.db.add(db_item)
         await self.db.commit()
         await self.db.refresh(db_item)
-        
-        item.id = db_item.id
-        return item
+
+        return self._to_entity(db_item)
 
     # 2. Cari Semua Barang 
     async def get_all(self, limit: int = 20) -> list[ItemEntity]:
@@ -90,3 +90,38 @@ class ItemRepository:
         result = await self.db.execute(query)
         db_items = result.scalars().all()
         return [self._to_entity(item) for item in db_items]
+
+    # 5. Update item (general — untuk update field apapun)
+    async def update(self, item: ItemEntity) -> ItemEntity:
+        result = await self.db.execute(select(ItemModel).where(ItemModel.id == item.id))
+        db_item = result.scalars().first()
+        
+        if not db_item:
+            raise ValueError("Item tidak ditemukan.")
+        
+        db_item.title = item.title
+        db_item.description = item.description
+        db_item.location = item.location
+        db_item.category = item.category
+        db_item.image = item.image
+        db_item.latitude = item.latitude
+        db_item.longitude = item.longitude
+        db_item.report_type = item.report_type
+        db_item.status = item.status
+        
+        await self.db.commit()
+        await self.db.refresh(db_item)
+        return self._to_entity(db_item)
+
+    # 6. Update status item saja (lebih spesifik, untuk mark-collected)
+    async def update_status(self, item_id: int, new_status) -> ItemEntity:
+        result = await self.db.execute(select(ItemModel).where(ItemModel.id == item_id))
+        db_item = result.scalars().first()
+        
+        if not db_item:
+            raise ValueError("Item tidak ditemukan.")
+        
+        db_item.status = new_status
+        await self.db.commit()
+        await self.db.refresh(db_item)
+        return self._to_entity(db_item)

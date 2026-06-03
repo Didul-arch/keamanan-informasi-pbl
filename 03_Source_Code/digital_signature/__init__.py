@@ -1,1 +1,1 @@
-"""Digital signature and authentication package."""
+# digital_signature package

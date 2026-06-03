@@ -54,4 +54,4 @@ digital_signature/
 ## 📝 Catatan Tambahan
 
 - **Pemisahan Concern**: Struktur ini memastikan fitur keamanan (autentikasi dan non-repudiation) tidak bercampur dengan _business logic_ biasa.
-- **Konvensi Import**: Proyek ini menggunakan arsitektur _absolute import_ yang merujuk pada tiga root folder. Oleh karena itu, jika Anda tidak menggunakan Docker dan ingin me-run program secara manual via uvicorn/alembic, perintah CLI **harus dijalankan dari level direktori `03_Source_Code`**.
+- **Konvensi Import**: Proyek ini menggunakan arsitektur _absolute import_ yang merujuk pada tiga root folder. Segala eksekusi CLI **harus dijalankan dari level direktori `03_Source_Code`**.

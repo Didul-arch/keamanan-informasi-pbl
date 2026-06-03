@@ -30,41 +30,25 @@ Implementasi aplikasi ada di [03_Source_Code](03_Source_Code). Di dalamnya:
 └── digital_signature/ # Auth, JWT, hashing, dan utilitas non-repudiation
 ```
 
-Penjelasan detail struktur source code ada di [03_Source_Code/README.md](03_Source_Code/README.md).
+Penjelasan detail struktur source code ada di [03_Source_Code/readme.md](03_Source_Code/readme.md).
 
 ## Cara Menjalankan Backend
 
-### Dengan Docker Compose
-
-Ini cara yang paling praktis karena sekaligus menyalakan backend dan database PostgreSQL.
+Ini adalah cara yang paling praktis karena akan menjalankan backend, database PostgreSQL lokal, serta melakukan migrasi database (Alembic) secara otomatis dalam satu perintah.
 
 ```bash
 cd 03_Source_Code
-docker compose -f backend/docker-compose.yml up --build
+docker compose -f backend/docker-compose.yml up --build -d
 ```
 
-Setelah service aktif, backend bisa diakses di `http://localhost:8000`.
+Setelah service aktif, backend bisa diakses di:
+- **API URL**: `http://localhost:8000`
+- **Swagger Docs**: `http://localhost:8000/docs`
 
-### Lokal
-
-```bash
-cd 03_Source_Code
-pip install -r backend/requirements.txt
-uvicorn backend.app.main:app --reload
-```
-
-## Migrasi Database
-
-Setelah backend dan database siap, migrasi Alembic bisa dijalankan dari folder `03_Source_Code`:
-
-```bash
-cd 03_Source_Code
-alembic -c backend/alembic.ini upgrade head
-```
 
 ## Catatan
 
-- Backend dijalankan dari folder `03_Source_Code` supaya paket `backend`, `database`, dan `digital_signature` bisa dipakai bersama.
-- Folder `database/` dipisah untuk session dan model ORM.
-- Folder `digital_signature/` dipakai untuk autentikasi/JWT dan utilitas keamanan.
-- Jika ingin melihat detail implementasi source code, buka [03_Source_Code/README.md](03_Source_Code/README.md).
+- Backend wajib dijalankan **dari dalam folder `03_Source_Code`** supaya *absolute import* ke paket `backend`, `database`, dan `digital_signature` bisa dikenali oleh Python.
+- Fitur Autentikasi dan Non-Repudiation dikemas khusus di dalam `digital_signature/` agar tidak bercampur dengan business logic utama.
+- Folder `database/` khusus menangani session dan ORM, dipanggil oleh service yang membutuhkan query data.
+- Jika ingin melihat detail implementasi source code, buka [03_Source_Code/readme.md](03_Source_Code/readme.md).

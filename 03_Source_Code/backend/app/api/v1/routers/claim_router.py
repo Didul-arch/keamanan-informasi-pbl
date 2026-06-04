@@ -216,37 +216,33 @@ async def get_my_history(
 
 @router.patch("/history/items/{item_id}/returned")
 async def mark_item_returned_from_history(
-	item_id: int,
-	db: AsyncSession = Depends(get_db),
-	current_user: UserEntity = Depends(get_current_user),
+    item_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: UserEntity = Depends(get_current_user),
 ):
-	if current_user.id is None:
-		raise HTTPException(status_code=500, detail="User id missing")
+    if current_user.id is None:
+        raise HTTPException(status_code=500, detail="User id missing")
 
-	approved_claim_result = await db.execute(
-		select(ClaimModel)
-		.where(ClaimModel.item_id == item_id)
-		.where(ClaimModel.claimer_id == current_user.id)
-		.where(ClaimModel.status == ClaimStatus.APPROVED)
-	)
-	approved_claim = approved_claim_result.scalars().first()
-	if not approved_claim:
-		raise HTTPException(status_code=403, detail="Tidak ada request approved untuk item ini")
+    item_result = await db.execute(select(ItemModel).where(ItemModel.id == item_id))
+    item = item_result.scalars().first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Item tidak ditemukan")
 
-	item_result = await db.execute(select(ItemModel).where(ItemModel.id == item_id))
-	item = item_result.scalars().first()
-	if not item:
-		raise HTTPException(status_code=404, detail="Item tidak ditemukan")
+    if item.reporter_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Hanya pelapor kehilangan (pemilik asli) yang dapat mengambil barang")
 
-	if item.status != ItemStatus.RETURNED:
-		item.status = ItemStatus.RETURNED
-		await db.commit()
-		await db.refresh(item)
+    if item.report_type.value != "lost" and str(item.report_type) != "lost":
+        raise HTTPException(status_code=403, detail="Hanya item yang dilaporkan hilang yang dapat ditandai kembali oleh pelapor")
 
-	history_repo = ActivityHistoryRepository(db)
-	updated_history = await history_repo.mark_user_item_returned(current_user.id, item_id)
+    if item.status != ItemStatus.RETURNED:
+        item.status = ItemStatus.RETURNED
+        await db.commit()
+        await db.refresh(item)
 
-	return {"status": "success", "data": updated_history}
+    history_repo = ActivityHistoryRepository(db)
+    updated_history = await history_repo.mark_user_item_returned(current_user.id, item_id)
+
+    return {"status": "success", "data": updated_history}
 
 
 @router.patch("/claims/{claim_id}/mark-collected")
@@ -264,6 +260,10 @@ async def mark_claim_collected(
     # Only the claimer can mark collected
     if current_user.id != claim.claimer_id:
         raise HTTPException(status_code=403, detail="Hanya claimer yang dapat menandai item sebagai dikumpulkan")
+
+    # Hanya pemilik (claim) yang bisa ngambil, bukan penemu (found_report)
+    if claim.request_type.value != "claim" and str(claim.request_type) != "claim":
+        raise HTTPException(status_code=403, detail="Hanya pemilik barang yang bisa mengambil (bukan penemu)")
 
     # Claim must be approved
     if claim.status != ClaimStatus.APPROVED:

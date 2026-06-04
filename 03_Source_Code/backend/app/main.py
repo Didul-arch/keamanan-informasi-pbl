@@ -13,7 +13,9 @@ from backend.app.api.v1.routers.claim_router import router as claim_router
 from backend.app.api.v1.routers.notification_router import router as notification_router
 from backend.app.api.v1.routers.item_router import router as item_router
 from backend.app.api.v1.routers.user_router import router as user_router
+from backend.app.api.v1.routers.history_router import router as history_router
 from backend.app.infrastructure.config.settings import settings
+from database.session import AsyncSessionLocal
 
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -47,11 +49,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(auth_router)
-app.include_router(claim_router)
-app.include_router(notification_router)
-app.include_router(item_router)
-app.include_router(user_router)
+app.include_router(auth_router, prefix="/api/v1/auth", tags=["auth"])
+app.include_router(claim_router, prefix="/api/v1", tags=["claims"])
+app.include_router(notification_router, prefix="/api/v1", tags=["notifications"])
+app.include_router(item_router, prefix="/api/v1", tags=["items"])
+app.include_router(user_router, prefix="/api/v1", tags=["users"])
+app.include_router(history_router, prefix="/api/v1", tags=["history"])
 
 @app.middleware("http")
 async def add_process_time_header(
@@ -83,11 +86,10 @@ async def audit_log_middleware(
     
     # Run DB insert synchronously or in background if possible, but we'll do it safely asynchronously
     # using a new session
-    from database.session import SessionLocal
     from database.models.audit_log_model import AuditLogModel
     
     try:
-        async with SessionLocal() as db:
+        async with AsyncSessionLocal() as db:
             log = AuditLogModel(
                 user_id=user_id,
                 action=action,

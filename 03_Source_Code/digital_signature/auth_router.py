@@ -14,7 +14,7 @@ from digital_signature import utils as auth_utils
 
 router = APIRouter()
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 
 from fastapi import UploadFile, File, Form
@@ -78,7 +78,7 @@ from pydantic import BaseModel
 class RefreshTokenRequest(BaseModel):
 	refresh_token: str
 
-@router.post("/token", response_model=Token)
+@router.post("/login", response_model=Token)
 @limiter.limit("5/minute")
 async def login_for_access_token(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)):
 	repo = UserRepository(db)

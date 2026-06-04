@@ -19,6 +19,10 @@ class Settings(BaseSettings):
     SECRET_KEY: str
     ALGORITHM: str 
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7
+    REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 30 # 30 days
+
+    # Security settings
+    ENCRYPTION_KEY: str
 
     # Storage settings
     STORAGE_PROVIDER: str = "local"

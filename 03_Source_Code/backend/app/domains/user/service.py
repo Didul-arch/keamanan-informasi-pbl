@@ -112,6 +112,10 @@ class UserService:
             if not has_identity:
                 raise ValueError("Civitas users must provide either identity_number or identity_document")
 
+        from digital_signature.encryption import encrypt_string
+        if identity_number is not None:
+            identity_number = encrypt_string(identity_number.strip() or None)
+
         updated_user = await self.user_repo.update(
             user_id,
             fullname=fullname,

@@ -16,7 +16,7 @@ if BASE_DIR not in sys.path:
 # Import from the new package structure
 from database.session import Base
 from backend.app.infrastructure.config.settings import settings
-from database.models import activity_history_model, claim_model, item_model, notification_model, user_model  # noqa: F401
+from database.models import activity_history_model, claim_model, item_model, notification_model, user_model, audit_log_model  # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

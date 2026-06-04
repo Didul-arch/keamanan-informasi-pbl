@@ -34,7 +34,11 @@ class ActivityHistoryRepository:
             "created_at": history.created_at.isoformat() if history.created_at else None,
             "updated_at": history.updated_at.isoformat() if history.updated_at else None,
             "completed_at": history.completed_at.isoformat() if history.completed_at else None,
-            "can_mark_returned": history.history_type == ActivityHistoryKind.REQUEST and history.request_status == "approved" and history.item_status == ItemStatus.NOT_RETURNED.value,
+            "can_mark_returned": (
+                (history.history_type == ActivityHistoryKind.REQUEST and history.request_type == "claim" and history.request_status == "approved" and history.item_status == ItemStatus.NOT_RETURNED.value)
+                or
+                (history.history_type == ActivityHistoryKind.REPORT and history.report_type == "lost" and history.item_status == ItemStatus.NOT_RETURNED.value)
+            ),
         }
 
     async def create_report_entry(self, user_id: int, item: ItemEntity) -> ActivityHistoryModel:
